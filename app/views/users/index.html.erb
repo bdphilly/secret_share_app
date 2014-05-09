@@ -1,21 +1,63 @@
 <h1>User Index</h1>
   <script>
+
   $(document).ready( function() {
-      $('.friend').on("click", function(event) {
-        var $clicked = $(event.target);
-        console.log($clicked);
-        var in_friend_id = $clicked.data("in_id");
-        alert(in_friend_id + "was clicked!");
+    $('.friend').on("click", function(event) {
+
+      var $clicked = $(event.target);
+      var $in_friend_id = $clicked.data("in_id");
+
+
+      var formData = $(this).serialize();
+
+      $clicked.html("friending...");
+
+      $.ajax({
+        url: "/users/" + $in_friend_id + "/friendships",
+        type: "POST",
+        data: formData,
+        success: this.remove.bind(this)
       });
     });
+
+    $('.unfriend').on("click", function(event) {
+      event.preventDefault();
+      var $clicked = $(event.target);
+
+      var fship_id = $clicked.data("fship_id");
+
+
+       // debugger
+      $clicked.html("unfriending...");
+
+      $.ajax({
+        url: "/friendships/" + fship_id,
+        type: "DELETE",
+        success: this.remove.bind(this)
+      });
+    });
+  });
   </script>
 
 <% @users.each do |user| %>
+<p>
   <%= user.username %>
+
   <% if Friendship.can_friend?(user.id, current_user.id) %>
+
     <button type="button" class="friend" data-in_id="<%= user.id %>">
       Add Friend
     </button>
+
   <% end %>
-  <br>
+
+   <% fship = @friendships.find_by(in_friend_id: user.id) %>
+
+   <% if fship %>
+     <button type="button" class="unfriend" data-fship_id="<%= fship.id %>">
+        Unfriend
+     </button>
+
+   </p>
+  <% end %>
 <% end %>
