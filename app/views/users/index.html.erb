@@ -1,12 +1,32 @@
 <h1>User Index</h1>
-  <script>
 
+<% @users.each do |user| %>
+  <% next if current_user == user %>
+<p>
+  <%= user.username %>
+
+  <button class="friend
+        <%= 'hidden' if !Friendship.can_friend?(current_user.id, user.id) %>"
+        id="<%= user.id %>"
+      data-in_id="<%= user.id %>">
+    Add Friend
+  </button>
+
+  <% friendship = Friendship.find_by(out_friend_id: user.id, in_friend_id: current_user.id) %>
+  <button class="unfriend <%= 'hidden' if Friendship.can_friend?(current_user.id, user.id) %>" data-in_id="<%= user.id %>" data-friendship_id="<%= friendship.id if friendship %>">
+    Unfriend
+  </button>
+
+</p>
+<% end %>
+
+
+<script>
   $(document).ready( function() {
     $('.friend').on("click", function(event) {
 
       var $clicked = $(event.target);
       var $in_friend_id = $clicked.data("in_id");
-
 
       var formData = $(this).serialize();
 
@@ -16,10 +36,12 @@
         url: "/users/" + $in_friend_id + "/friendships",
         type: "POST",
         data: formData,
-        success: function() {
-
+        success: function(id) {
+          console.log(id)
           $("button[data-in_id=\"" + $in_friend_id +
                       "\"]").toggleClass("hidden");
+          $("button[data-in_id=\"" + $in_friend_id +
+                                  "\"]").last().attr('data-friendship_id', id);
           $('.friend').html('Add Friend');
           $('.unfriend').html('Unfriend');
         }
@@ -27,19 +49,19 @@
     });
 
     $('.unfriend').on("click", function(event) {
-      event.preventDefault();
+
       var $clicked = $(event.target);
 
-      var fship_id = $clicked.data("fship_id");
       var $in_friend_id = $clicked.data("in_id");
+
+      var $friendship_id = $clicked.attr('data-friendship_id');
 
       $clicked.html("unfriending...");
 
       $.ajax({
-        url: "/users/" + $in_friend_id + "/friendships",//"/friendships/" + in_id,
-        type: "POST",
+        url: "/friendships/" + $friendship_id,
+        type: "DELETE",
         success: function() {
-
           $("button[data-in_id=\"" + $in_friend_id +
                       "\"]").toggleClass("hidden");
           $('.friend').html('Add Friend');
@@ -48,28 +70,4 @@
       });
     });
   });
-  </script>
-
-  <!-- #check if can friend
-  #toggle on can friend class
-  #toggle off unfriend
-  #else toggle off friend class toggle on unfriend --> -->
-
-<% @users.each do |user| %>
-<p>
-  <%= user.username %>
-
-  <button type="button" class="friend
-        <%= 'hidden' if !Friendship.can_friend?(current_user.id, user.id) %>"
-        id="<%= user.id %>"
-      data-in_id="<%= user.id %>">
-    Add Friend
-  </button>
-  <button type="button" class="unfriend
-        <%= 'hidden' if Friendship.can_friend?(current_user.id, user.id) %>"
-      data-in_id="<%= user.id %>">
-    Unfriend
-  </button>
-
-</p>
-<% end %>
+</script>
