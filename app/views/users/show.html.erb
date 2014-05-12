@@ -1,25 +1,29 @@
 <h1><%= @user.username %></h1>
 
 <h2>Secrets</h2>
-<ul id="secrets">
+<ul class="secrets-list">
   <% @user.received_secrets.each do |secret| %>
     <li><%= secret.title %></li>
   <% end %>
 </ul>
 
-<%= render "secrets/form" %>
+<%= render "secrets/form", :secret => @user.received_secrets.new %>
 
 <script>
-  $("form.#secret-form").on("submit", function (event) {
+  $("form.secrets-form").on("submit", function (event) {
   	event.preventDefault();
 
-  	var formData = $(this).serialize();
+    // var $currentTarget = $(event.currentTarget);
+    // var formData = $currentTarget.serializeJSON();
+
+    var formData = $(this).serializeJSON();
+
   	$.ajax({
-  		url: "/users/" + <%= @user.id %> + "/secrets",
+  		url: "/secrets",
   		type: "POST",
   		data: formData,
   		success: function (formData) {
-  			$("ul#secrets").append($("<li>").text(formData.title));
+  			$("ul.secrets-list").append($("<li>").text(formData.title));
   		}
   	});
   });
